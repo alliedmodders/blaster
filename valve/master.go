@@ -43,16 +43,7 @@ func (this *MasterServerQuerier) FilterAppIds(appIds []int32) {
 }
 
 func computeNextFilterList(filters []string) ([]string, []string) {
-	next := []string{}
-	length := 0
-	for _, filter := range filters {
-		if len(filter) + length >= kMaxFilterLength {
-			break
-		}
-		length += len(filter)
-		next = append(next, filter)
-	}
-	return next, filters[len(next):]
+	return filters[0:1], filters[1:]
 }
 
 // Query the master. Since the master server has timeout problems with lots of
@@ -84,6 +75,8 @@ func BuildMasterQuery(hostAndPort string, filters []string) []byte {
 	if len(filters) == 0 {
 		packet.WriteByte(0)
 		packet.WriteByte(0)
+	} else if len(filters) == 1 {
+		packet.WriteCString(filters[0])
 	} else {
 		header := fmt.Sprintf("\\or\\%d", len(filters))
 		packet.WriteBytes([]byte(header))
