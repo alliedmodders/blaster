@@ -105,8 +105,6 @@ func (this *UdpSocket) setNextQueryTime() {
 }
 
 func (this *UdpSocket) Send(bytes []byte) error {
-	print(time.Now().String())
-	print("\n")
 	this.enforceRateLimit()
 	defer this.setNextQueryTime()
 
