@@ -34,12 +34,12 @@ type PacketReader struct {
 func NewPacketReader(packet []byte) *PacketReader {
 	return &PacketReader{
 		buffer: packet,
-		pos: 0,
+		pos:    0,
 	}
 }
 
 func (this *PacketReader) canRead(size int) error {
-	if size + this.pos > len(this.buffer) {
+	if size+this.pos > len(this.buffer) {
 		return ErrOutOfBounds
 	}
 	return nil
@@ -50,7 +50,7 @@ func (this *PacketReader) ReadIPv4() (net.IP, error) {
 		return nil, err
 	}
 
-	ip := net.IP(this.buffer[this.pos:this.pos+net.IPv4len])
+	ip := net.IP(this.buffer[this.pos : this.pos+net.IPv4len])
 	this.pos += net.IPv4len
 	return ip, nil
 }
@@ -69,6 +69,8 @@ type UdpSocket struct {
 	timeout time.Duration
 	cn      net.Conn
 	buffer  [kMaxPacketSize]byte
+	wait    time.Duration
+	next    time.Time
 }
 
 func NewUdpSocket(address string, timeout time.Duration) (*UdpSocket, error) {
@@ -79,15 +81,35 @@ func NewUdpSocket(address string, timeout time.Duration) (*UdpSocket, error) {
 
 	return &UdpSocket{
 		timeout: timeout,
-		cn: cn,
+		cn:      cn,
 	}, nil
+}
+
+func (this *UdpSocket) SetRateLimit(ratePerMinute int) {
+	this.wait = (time.Minute / time.Duration(ratePerMinute)) + time.Second
 }
 
 func (this *UdpSocket) extendedDeadline() time.Time {
 	return time.Now().Add(this.timeout)
 }
 
+func (this *UdpSocket) enforceRateLimit() {
+	wait := this.next.Sub(time.Now())
+	if wait > 0 {
+		time.Sleep(wait)
+	}
+}
+
+func (this *UdpSocket) setNextQueryTime() {
+	this.next = time.Now().Add(this.wait)
+}
+
 func (this *UdpSocket) Send(bytes []byte) error {
+	print(time.Now().String())
+	print("\n")
+	this.enforceRateLimit()
+	defer this.setNextQueryTime()
+
 	// Set timeout.
 	this.cn.SetWriteDeadline(this.extendedDeadline())
 
@@ -97,6 +119,8 @@ func (this *UdpSocket) Send(bytes []byte) error {
 }
 
 func (this *UdpSocket) Recv() ([]byte, error) {
+	defer this.setNextQueryTime()
+
 	// Set timeout.
 	this.cn.SetReadDeadline(this.extendedDeadline())
 
@@ -104,6 +128,7 @@ func (this *UdpSocket) Recv() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return this.buffer[:n], nil
 }
 

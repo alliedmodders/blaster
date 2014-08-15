@@ -24,15 +24,25 @@ type MasterQueryCallback func(servers ServerList) error
 
 // Class for querying the master server.
 type MasterServerQuerier struct {
+	cn          *UdpSocket
 	hostAndPort string
 	filters     []string
 }
 
 // Create a new master server querier on the given host and port.
-func NewMasterServerQuerier(hostAndPort string) *MasterServerQuerier {
-	return &MasterServerQuerier{
-		hostAndPort: hostAndPort,
+func NewMasterServerQuerier(hostAndPort string) (*MasterServerQuerier, error) {
+	cn, err := NewUdpSocket(hostAndPort, kDefaultMasterTimeout)
+	if err != nil {
+		return nil, err
 	}
+
+	// 20 queries per minute, according to Valve. 15 seems to work best for us.
+	cn.SetRateLimit(15)
+
+	return &MasterServerQuerier{
+		cn:          cn,
+		hostAndPort: hostAndPort,
+	}, nil
 }
 
 // Adds by AppIds to the filter list.
@@ -89,18 +99,12 @@ func BuildMasterQuery(hostAndPort string, filters []string) []byte {
 }
 
 func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters []string) error {
-	cn, err := NewUdpSocket(this.hostAndPort, kDefaultMasterTimeout)
-	if err != nil {
-		return err
-	}
-	defer cn.Close()
-
 	query := BuildMasterQuery("0.0.0.0:0", filters)
-	if err = cn.Send(query); err != nil {
+	if err := this.cn.Send(query); err != nil {
 		return err
 	}
 
-	packet, err := cn.Recv()
+	packet, err := this.cn.Recv()
 	if err != nil {
 		return err
 	}
@@ -136,7 +140,7 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 			}
 
 			servers = append(servers, &net.TCPAddr{
-				IP: ip,
+				IP:   ip,
 				Port: int(port),
 			})
 
@@ -157,14 +161,13 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 
 		// Attempt to get the next batch 4 more times.
 		for i := 1; ; i++ {
-			time.Sleep(time.Second * 2)
 			address := fmt.Sprintf("%s:%d", ip.String(), port)
 			query := BuildMasterQuery(address, filters)
-			if err = cn.Send(query); err != nil {
+			if err = this.cn.Send(query); err != nil {
 				return err
 			}
 
-			if packet, err = cn.Recv(); err == nil {
+			if packet, err = this.cn.Recv(); err == nil {
 				// Ok, keep going.
 				break
 			}
@@ -177,4 +180,8 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 	}
 
 	return nil
+}
+
+func (this *MasterServerQuerier) Close() {
+	this.cn.Close()
 }

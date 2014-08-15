@@ -7,10 +7,15 @@ import (
 )
 
 func main() {
-	master := NewMasterServerQuerier("hl1master.steampowered.com:27011")
+	master, err := NewMasterServerQuerier("hl2master.steampowered.com:27011")
+	if err != nil {
+		panic(err)
+	}
+	defer master.Close()
+
 	master.FilterAppIds(HL1Apps)
 	batch := 0
-	err := master.Query(func(servers ServerList) error {
+	err = master.Query(func(servers ServerList) error {
 		for _, server := range servers {
 			fmt.Printf("[%d] %s\n", batch, server)
 		}
