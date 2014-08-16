@@ -18,6 +18,10 @@ var kNullIP = net.IP([]byte{0, 0, 0, 0})
 // A list of IP addresses and ports.
 type ServerList []*net.TCPAddr
 
+// A list of servers from the master.
+type MasterServerBatch struct {
+}
+
 // The callback the master query tool uses to notify of a batch of servers that
 // has just been received.
 type MasterQueryCallback func(servers ServerList) error
@@ -46,10 +50,14 @@ func NewMasterServerQuerier(hostAndPort string) (*MasterServerQuerier, error) {
 }
 
 // Adds by AppIds to the filter list.
-func (this *MasterServerQuerier) FilterAppIds(appIds []int32) {
+func (this *MasterServerQuerier) FilterAppIds(appIds []AppId) {
 	for _, appId := range appIds {
 		this.filters = append(this.filters, fmt.Sprintf("\\appid\\%d", appId))
 	}
+}
+
+func (this *MasterServerQuerier) ClearFilters() {
+	this.filters = []string{}
 }
 
 func computeNextFilterList(filters []string) ([]string, []string) {

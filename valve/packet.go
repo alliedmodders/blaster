@@ -65,6 +65,52 @@ func (this *PacketReader) ReadPort() (uint16, error) {
 	return port, nil
 }
 
+func (this *PacketReader) ReadUint8() uint8 {
+	b := this.buffer[this.pos]
+	this.pos++
+	return b
+}
+
+func (this *PacketReader) ReadUint16() uint16 {
+	u16 := binary.LittleEndian.Uint16(this.buffer[this.pos:])
+	this.pos += 2
+	return u16
+}
+
+func (this *PacketReader) ReadUint32() uint32 {
+	u32 := binary.LittleEndian.Uint32(this.buffer[this.pos:])
+	this.pos += 4
+	return u32
+}
+
+func (this *PacketReader) ReadInt32() int32 {
+	return int32(this.ReadUint32())
+}
+
+func (this *PacketReader) ReadUint64() uint64 {
+	u64 := binary.LittleEndian.Uint64(this.buffer[this.pos:])
+	this.pos += 8
+	return u64
+}
+
+func (this *PacketReader) ReadString() string {
+	start := this.pos
+	for {
+		// Note: it's intended that we panic for strings that are not null
+		// terminated.
+		if this.buffer[this.pos] == 0 {
+			this.pos++
+			break
+		}
+		this.pos++
+	}
+	return string(this.buffer[start:this.pos])
+}
+
+func (this *PacketReader) More() bool {
+	return this.pos < len(this.buffer)
+}
+
 type UdpSocket struct {
 	timeout time.Duration
 	cn      net.Conn
@@ -85,6 +131,10 @@ func NewUdpSocket(address string, timeout time.Duration) (*UdpSocket, error) {
 	}, nil
 }
 
+func (this *UdpSocket) RemoteAddr() net.Addr {
+	return this.cn.RemoteAddr()
+}
+
 func (this *UdpSocket) SetRateLimit(ratePerMinute int) {
 	this.wait = (time.Minute / time.Duration(ratePerMinute)) + time.Second
 }
@@ -94,6 +144,10 @@ func (this *UdpSocket) extendedDeadline() time.Time {
 }
 
 func (this *UdpSocket) enforceRateLimit() {
+	if this.wait == 0 {
+		return
+	}
+
 	wait := this.next.Sub(time.Now())
 	if wait > 0 {
 		time.Sleep(wait)
@@ -101,7 +155,9 @@ func (this *UdpSocket) enforceRateLimit() {
 }
 
 func (this *UdpSocket) setNextQueryTime() {
-	this.next = time.Now().Add(this.wait)
+	if this.wait != 0 {
+		this.next = time.Now().Add(this.wait)
+	}
 }
 
 func (this *UdpSocket) Send(bytes []byte) error {
@@ -109,7 +165,9 @@ func (this *UdpSocket) Send(bytes []byte) error {
 	defer this.setNextQueryTime()
 
 	// Set timeout.
-	this.cn.SetWriteDeadline(this.extendedDeadline())
+	if this.timeout > 0 {
+		this.cn.SetWriteDeadline(this.extendedDeadline())
+	}
 
 	// UDP is all or nothing.
 	_, err := this.cn.Write(bytes)
@@ -120,7 +178,9 @@ func (this *UdpSocket) Recv() ([]byte, error) {
 	defer this.setNextQueryTime()
 
 	// Set timeout.
-	this.cn.SetReadDeadline(this.extendedDeadline())
+	if this.timeout > 0 {
+		this.cn.SetReadDeadline(this.extendedDeadline())
+	}
 
 	n, err := this.cn.Read(this.buffer[0:kMaxPacketSize])
 	if err != nil {
