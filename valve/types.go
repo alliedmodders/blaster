@@ -32,6 +32,7 @@ const (
 	ServerType_Unknown ServerType = iota
 	ServerType_Dedicated
 	ServerType_Listen
+	ServerType_HLTV
 )
 
 // Returns the server type as a string.
@@ -41,6 +42,8 @@ func (this ServerType) String() string {
 		return "dedicated"
 	case ServerType_Listen:
 		return "listen"
+	case ServerType_HLTV:
+		return "hltv"
 	default:
 		return "unknown"
 	}

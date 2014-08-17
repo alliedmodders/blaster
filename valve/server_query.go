@@ -177,6 +177,12 @@ func (this *ServerQuerier) parseNewInfo(reader *PacketReader, info *ServerInfo) 
 }
 
 func (this *ServerQuerier) parseOldInfo(reader *PacketReader, info *ServerInfo) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("%s %+v %+v\n", this.socket.RemoteAddr().String(), info, info.Mod)
+			panic(r)
+		}
+	}()
 	info.Address = reader.ReadString()
 	info.Name = reader.ReadString()
 	info.MapName = reader.ReadString()
@@ -213,17 +219,21 @@ func (this *ServerQuerier) parseOldInfo(reader *PacketReader, info *ServerInfo) 
 		return
 	}
 
-	info.Mod = &ModInfo{}
-	info.Mod.Url = reader.ReadString()
-	info.Mod.DwlUrl = reader.ReadString()
-	reader.ReadUint8() // Ignore a null byte.
-	info.Mod.Version = reader.ReadUint32()
-	info.Mod.Size = reader.ReadUint32()
-	info.Mod.Type = reader.ReadUint8()
-	info.Mod.Dll = reader.ReadUint8()
+	// Some servers reply with a corrupt mod section. We just eat those errors.
+	tryAndCatch(func() error {
+		info.Mod = &ModInfo{}
+		info.Mod.Url = reader.ReadString()
+		info.Mod.DwlUrl = reader.ReadString()
+		reader.ReadUint8() // Ignore a null byte.
+		info.Mod.Version = reader.ReadUint32()
+		info.Mod.Size = reader.ReadUint32()
+		info.Mod.Type = reader.ReadUint8()
+		info.Mod.Dll = reader.ReadUint8()
 
-	// This data is only exposed through is_mod == 1, but we put it in general
-	// info anyway.
-	info.Vac = reader.ReadUint8()
-	info.Bots = reader.ReadUint8()
+		// This data is only exposed through is_mod == 1, but we put it in general
+		// info anyway.
+		info.Vac = reader.ReadUint8()
+		info.Bots = reader.ReadUint8()
+		return nil
+	})
 }
