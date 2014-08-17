@@ -103,8 +103,11 @@ var HL2Apps = []AppId{
 	App_FistfulOfFrags,
 }
 
-var PreOrangeBoxApps = []AppId{
-	App_SDK2006,
-	App_EternalSilence,
-	App_InsurgencyMod,
+func IsPreOrangeBoxApp(appId AppId) bool {
+	switch appId {
+	case App_SDK2006, App_EternalSilence, App_InsurgencyMod:
+		return true
+	default:
+		return false
+	}
 }

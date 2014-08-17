@@ -106,7 +106,7 @@ type AppInfo struct {
 	ModId   uint32
 }
 
-// Optional information available with A2S_INFO_SOURCE. This isa  grab-bag
+// Optional information available with A2S_INFO_SOURCE. This is a grab-bag
 // of various optional bits. If some are not present they are left as 0.
 // In the future this may change to distinguish from being present as 0.
 type ExtendedInfo struct {
@@ -156,4 +156,16 @@ func (this *ServerInfo) GameEngine() GameEngine {
 		return GOLDSRC
 	}
 	return SOURCE
+}
+
+// Determines whether or not a Source server is pre-orangebox. This should
+// not be called on non-Source servers.
+func (this *ServerInfo) IsPreOrangeBox() bool {
+	if IsPreOrangeBoxApp(this.Ext.AppId) {
+		return true
+	}
+	if this.Ext.AppId == App_CSS && this.Protocol == 7 {
+		return true
+	}
+	return false
 }
