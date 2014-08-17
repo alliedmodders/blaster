@@ -27,4 +27,4 @@ func tryNoCatch(fn func() error) error {
 }
 
 // This can be changed to enable panics.
-var Try = tryNoCatch
+var Try = tryAndCatch
