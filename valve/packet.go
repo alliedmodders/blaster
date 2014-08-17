@@ -51,6 +51,19 @@ func (this *PacketReader) canRead(size int) error {
 	return nil
 }
 
+func (this *PacketReader) Slice(count int) []byte {
+	if this.canRead(count) != nil {
+		return nil
+	}
+	bytes := this.buffer[this.pos:this.pos+count]
+	this.pos += count
+	return bytes
+}
+
+func (this *PacketReader) Pos() int {
+	return this.pos
+}
+
 func (this *PacketReader) ReadIPv4() (net.IP, error) {
 	if err := this.canRead(net.IPv4len); err != nil {
 		return nil, err
@@ -99,6 +112,18 @@ func (this *PacketReader) ReadUint64() uint64 {
 	return u64
 }
 
+func (this *PacketReader) TryReadString() (string, bool) {
+	start := this.pos
+	for this.pos < len(this.buffer) {
+		if this.buffer[this.pos] == 0 {
+			this.pos++
+			return string(this.buffer[start:this.pos-1]), true
+		}
+		this.pos++
+	}
+	return "", false
+}
+
 func (this *PacketReader) ReadString() string {
 	start := this.pos
 	for {
@@ -110,7 +135,7 @@ func (this *PacketReader) ReadString() string {
 		}
 		this.pos++
 	}
-	return string(this.buffer[start:this.pos])
+	return string(this.buffer[start:this.pos-1])
 }
 
 func (this *PacketReader) More() bool {
@@ -135,6 +160,10 @@ func NewUdpSocket(address string, timeout time.Duration) (*UdpSocket, error) {
 		timeout: timeout,
 		cn:      cn,
 	}, nil
+}
+
+func (this *UdpSocket) SetTimeout(timeout time.Duration) {
+	this.timeout = timeout
 }
 
 func (this *UdpSocket) RemoteAddr() net.Addr {
@@ -193,7 +222,9 @@ func (this *UdpSocket) Recv() ([]byte, error) {
 		return nil, err
 	}
 
-	return this.buffer[:n], nil
+	buffer := make([]byte, n)
+	copy(buffer, this.buffer[:n])
+	return buffer, nil
 }
 
 func (this *UdpSocket) Close() {
