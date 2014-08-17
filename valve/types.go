@@ -1,5 +1,22 @@
 package valve
 
+import (
+	"net"
+)
+
+// A list of IP addresses and ports.
+type ServerList []*net.TCPAddr
+
+// Implements Batch.Len().
+func (this ServerList) Len() int {
+	return len(this)
+}
+
+// Implements Batch.Item().
+func (this ServerList) Item(index int) interface{} {
+	return this[index]
+}
+
 // The game engine (either HL1 or HL2).
 type GameEngine int
 
