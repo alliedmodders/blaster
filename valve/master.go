@@ -126,7 +126,7 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 		serverCount := len(packet) / 6
 
 		if serverCount == 0 {
-			return fmt.Errorf("expected more than one server in response")
+			break
 		}
 
 		servers := ServerList{}
