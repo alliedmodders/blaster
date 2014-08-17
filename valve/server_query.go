@@ -1,9 +1,12 @@
 package valve
 
 import (
+	"bytes"
+	"compress/bzip2"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"time"
 )
 
@@ -17,6 +20,8 @@ var ErrDuplicatePacket = errors.New("received duplicate numbered packets")
 var ErrBadPacketNumber = errors.New("packet number is out of sequence")
 var ErrConfusedChallengeReply = errors.New("challenge reply is for the wrong query")
 var ErrBadRulesReply = errors.New("bad rules reply")
+var ErrWrongBz2Size = errors.New("bad bz2 decompression size")
+var ErrWrongBz2Checksum = errors.New("bad bz2 checksum")
 
 // Always import fmt for debugging.
 var _ = fmt.Println
@@ -275,7 +280,8 @@ func (this *ServerQuerier) QueryRules() (map[string]string, error) {
 	var rules map[string]string
 	var err error
 
-	Try(func() error {
+	// Note: must assign |err| in case there's a panic.
+	err = Try(func() error {
 		rules, err = this.queryRules()
 		return err
 	})
@@ -407,8 +413,8 @@ func (this *ServerQuerier) decodeMultiPacketHeader(data []byte) *MultiPacketHead
 
 	case SOURCE:
 		header.Compressed = (header.Id & uint32(0x80000000)) != 0
-		header.PacketNumber = reader.ReadUint8()
 		header.TotalPackets = reader.ReadUint8()
+		header.PacketNumber = reader.ReadUint8()
 		if !this.info.IsPreOrangeBox() {
 			header.PacketSize = reader.ReadUint16()
 		}
@@ -466,7 +472,25 @@ func (this *ServerQuerier) processRules(data []byte, compressed bool) (map[strin
 	reader := NewPacketReader(data)
 
 	if compressed {
-		panic(fmt.Errorf("compressed!"))
+		decompressedSize := reader.ReadUint32()
+		checksum := reader.ReadUint32()
+
+		decompressed := make([]byte, decompressedSize)
+		bz2Reader := bzip2.NewReader(bytes.NewReader(data[reader.Pos():]))
+		n, err := bz2Reader.Read(decompressed)
+		if err != nil {
+			return nil, err
+		}
+		if n != int(decompressedSize) {
+			return nil, ErrWrongBz2Size
+		}
+		if crc32.ChecksumIEEE(decompressed) != checksum {
+			return nil, ErrWrongBz2Checksum
+		}
+
+		// Switch to the decompressed stream.
+		data = decompressed
+		reader = NewPacketReader(data)
 	}
 
 	if reader.ReadInt32() != -1 {
