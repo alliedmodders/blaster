@@ -18,13 +18,9 @@ var kNullIP = net.IP([]byte{0, 0, 0, 0})
 // A list of IP addresses and ports.
 type ServerList []*net.TCPAddr
 
-// A list of servers from the master.
-type MasterServerBatch struct {
-}
-
 // The callback the master query tool uses to notify of a batch of servers that
 // has just been received.
-type MasterQueryCallback func(servers ServerList) error
+type MasterQueryCallback func(batch ServerList) error
 
 // Class for querying the master server.
 type MasterServerQuerier struct {
@@ -147,16 +143,16 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 				return err
 			}
 
-			servers = append(servers, &net.TCPAddr{
-				IP:   ip,
-				Port: int(port),
-			})
-
 			// The list is terminated with 0s.
 			if ip.Equal(kNullIP) && port == 0 {
 				done = true
 				break
 			}
+
+			servers = append(servers, &net.TCPAddr{
+				IP:   ip,
+				Port: int(port),
+			})
 		}
 
 		if err := callback(servers); err != nil {
