@@ -18,6 +18,7 @@ type BatchProcessor struct {
 	stopCommand    chan bool
 	finishedSignal chan bool
 	taskDone       chan bool
+	stopped        bool
 
 	// These are only modified from the process goroutine.
 	worklist    []interface{} // Pending items to create tasks for.
@@ -70,6 +71,12 @@ func (this *BatchProcessor) Terminate() {
 }
 
 func (this *BatchProcessor) send_stop(terminate bool) {
+	// Don't re-enter this function.
+	if this.stopped {
+		return
+	}
+	this.stopped = true
+
 	// Signal to the processing routine that it should stop.
 	this.stopCommand <- terminate
 
