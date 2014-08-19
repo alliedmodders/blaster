@@ -105,7 +105,7 @@ var HL2Apps = []AppId{
 
 func IsPreOrangeBoxApp(appId AppId) bool {
 	switch appId {
-	case App_SDK2006, App_EternalSilence, App_InsurgencyMod:
+	case App_SDK2006, App_EternalSilence, App_InsurgencyMod, App_Neotokyo:
 		return true
 	default:
 		return false

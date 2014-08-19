@@ -475,6 +475,11 @@ func (this *ServerQuerier) processRules(data []byte, compressed bool) (map[strin
 		decompressedSize := reader.ReadUint32()
 		checksum := reader.ReadUint32()
 
+		// Sanity check so we don't allocate and zero 3GB of memory by accident.
+		if decompressedSize > uint32(1024 * 1024) {
+			return nil, ErrWrongBz2Size
+		}
+
 		decompressed := make([]byte, decompressedSize)
 		bz2Reader := bzip2.NewReader(bytes.NewReader(data[reader.Pos():]))
 		n, err := bz2Reader.Read(decompressed)
