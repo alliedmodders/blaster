@@ -79,31 +79,25 @@ const A2S_INFO_SOURCE uint8 = 0x49
 
 // Optional mod information returned by A2S_INFO_GOLDSRC.
 type ModInfo struct {
-	Url     string
-	DwlUrl  string
-	Version uint32
-	Size    uint32
-	Type    uint8
-	Dll     uint8
+	Url     string `json:"url"`
+	DwlUrl  string `json:"dwlurl"`
+	Version uint32 `json:"version"`
+	Size    uint32 `json:"size"`
+	Type    uint8  `json:"type"`
+	Dll     uint8  `json:"dll"`
 }
 
 // Optional information returned by App_TheShip.
 type TheShipInfo struct {
-	Mode      uint8
-	Witnesses uint8
-	Duration  uint8
+	Mode      uint8 `json:"mode"`
+	Witnesses uint8 `json:"witnesses"`
+	Duration  uint8 `json:"duration"`
 }
 
 // Optional information available with A2S_INFO_SOURCE.
 type SpecTvInfo struct {
 	Port uint16
 	Name string
-}
-
-// Optional information available with A2S_INFO_SOURCE.
-type AppInfo struct {
-	AppType uint8
-	ModId   uint32
 }
 
 // Optional information available with A2S_INFO_SOURCE. This is a grab-bag
@@ -115,7 +109,7 @@ type ExtendedInfo struct {
 	Port                uint16 // 0 if not present.
 	SteamId             uint64 // 0 if not present.
 	GameModeDescription string // "" if not present.
-	AppInfo             *AppInfo
+	GameId              uint64 // 0 if not present.
 }
 
 // Information returned by an A2S_INFO query. Most of this is returned as-is

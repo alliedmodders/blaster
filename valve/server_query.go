@@ -40,7 +40,7 @@ func NewServerQuerier(hostAndPort string, timeout time.Duration) (*ServerQuerier
 		return nil, err
 	}
 	return &ServerQuerier{
-		socket: socket,
+		socket:  socket,
 		timeout: timeout,
 	}, nil
 }
@@ -94,7 +94,7 @@ func (this *ServerQuerier) check_bad_a2s_info(info *ServerInfo) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Try to decode either packet as an A2S_INFO.
 	if this.parse_a2s_info_reply(this.info, data1) == nil {
 		return nil
@@ -220,9 +220,7 @@ func (this *ServerQuerier) parseNewInfo(reader *PacketReader, info *ServerInfo) 
 		// bits 24-31: type
 		// bits 32-63: mod id
 		info.Ext.AppId = AppId(gameId & uint64(0xffffffff))
-		info.Ext.AppInfo = &AppInfo{}
-		info.Ext.AppInfo.AppType = uint8((gameId >> 24) & 0xff)
-		info.Ext.AppInfo.ModId = uint32((gameId >> 32) & 0xffffffff)
+		info.Ext.GameId = gameId
 	}
 }
 
@@ -373,24 +371,24 @@ func (this *ServerQuerier) a2s_rules() ([]byte, error) {
 
 type MultiPacketHeader struct {
 	// Size of the packet header itself.
-	Size           int
+	Size int
 
 	// Packet sequence id.
-	Id             uint32
+	Id uint32
 
 	// Packet number out of Total Packets.
-	PacketNumber   uint8
+	PacketNumber uint8
 
 	// Total number of packets to receive.
-	TotalPackets   uint8
+	TotalPackets uint8
 
 	// Packet size (0 if not present).
-	PacketSize     uint16
+	PacketSize uint16
 
 	// Compression information.
-	Compressed     bool
+	Compressed bool
 
-	Payload        []byte
+	Payload []byte
 }
 
 func (this *ServerQuerier) decodeMultiPacketHeader(data []byte) *MultiPacketHeader {
@@ -476,7 +474,7 @@ func (this *ServerQuerier) processRules(data []byte, compressed bool) (map[strin
 		checksum := reader.ReadUint32()
 
 		// Sanity check so we don't allocate and zero 3GB of memory by accident.
-		if decompressedSize > uint32(1024 * 1024) {
+		if decompressedSize > uint32(1024*1024) {
 			return nil, ErrWrongBz2Size
 		}
 
