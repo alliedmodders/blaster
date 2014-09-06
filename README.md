@@ -5,6 +5,8 @@ Blaster is a tool for querying servers from the Valve Master Server List. There 
 
 Valve's master server has a rate limit of about 15 queries per minute, and returns a batch of ~220 servers for each query. For a popular game, it can take a long time (around ten minutes) to retrieve its entire server list. Blaster will query individual game servers in the background to lessen the overall waiting time. At the moment it will process 20 servers in the background, concurrently. Go's scheduler is still weak so it's not recommended to use more.
 
+Windows binaries are available for convenience under the Releases page on GitHub (https://github.com/alliedmodders/blaster/releases). See below for building Blaster on other systems.
+
 Usage
 -----
 You can use blaster either across all of Half-Life 1 or Half-Life 2, or with a specific list of Application IDs. For a full list of Application IDs, see: https://developer.valvesoftware.com/wiki/Steam_Application_IDs
