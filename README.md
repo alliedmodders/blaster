@@ -1,27 +1,9 @@
 blaster
 =======
 
-Source and GoldSrc Query Tool
+Blaster is a tool for querying servers from the Valve Master Server List. There are three components: a set of libraries for querying Valve protocols (which have many edge cases), a concurrenct batch-processing library, and a command-line tool for getting query results as JSON.
 
-Building
---------
-
-1. Make sure you have Golang installed, (see: http://golang.org/)
-2. Make sure your Go environment is set up. Example:
-
-        export GOROOT=~/tools/go
-        export GOPATH=~/go
-        export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
-
-3. Get the source code and its dependencies:
-
-        go get github.com/alliedmodders/blaster
-
-4. Build:
-
-        go install
-
-5. The `blaster` binary wll be in `$GOPATH/bin/`.
+Valve's master server has a rate limit of about 15 queries per minute, and returns a batch of ~220 servers for each query. For a popular game, it can take a long time (around ten minutes) to retrieve its entire server list. Blaster will query individual game servers in the background to lessen the overall waiting time. At the moment it will process 20 servers in the background, concurrently. Go's scheduler is still weak so it's not recommended to use more.
 
 Usage
 -----
@@ -56,3 +38,28 @@ $ go run blaster.go -appids 2450 -norules -format=list
 	}
 ]
 ```
+
+Building
+--------
+
+1. Make sure you have Golang installed, (see: http://golang.org/)
+2. Make sure your Go environment is set up. Example:
+
+        export GOROOT=~/tools/go
+        export GOPATH=~/go
+        export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
+
+3. Get the source code and its dependencies:
+
+        go get github.com/alliedmodders/blaster
+
+4. Build:
+
+        go install
+
+5. The `blaster` binary wll be in `$GOPATH/bin/`.
+
+Resources
+---------
+https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
+https://developer.valvesoftware.com/wiki/Server_queries
