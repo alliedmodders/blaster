@@ -9,8 +9,6 @@ Usage
 -----
 You can use blaster either across all of Half-Life 1 or Half-Life 2, or with a specific list of Application IDs. For a full list of Application IDs, see: https://developer.valvesoftware.com/wiki/Steam_Application_IDs
 
-All output is in JSON format.
-
 For example, querying "Bloody Good Time":
 ```
 $ blaster -appids 2450 -norules -format=list
