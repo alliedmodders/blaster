@@ -13,7 +13,7 @@ All output is in JSON format.
 
 For example, querying "Bloody Good Time":
 ```
-$ go run blaster.go -appids 2450 -norules -format=list
+$ blaster -appids 2450 -norules -format=list
 [
 	{
 		"ip": "168.62.205.3:27016",
