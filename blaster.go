@@ -23,9 +23,12 @@ import (
 	valve "github.com/alliedmodders/blaster/valve"
 )
 
-var sOutputLock sync.Mutex
-var sOutputMap = make(map[string]interface{})
-var sOutputFormat string
+var (
+	sOutputLock sync.Mutex
+	sOutputBuffer io.Writer
+	sOutputFormat string
+	sNumServers int64
+)
 
 type ErrorObject struct {
 	Ip    string `json:"ip"`
@@ -67,21 +70,37 @@ type ServerObject struct {
 	Rules        map[string]string  `json:"rules"`
 }
 
-func showError(hostAndPort string, err error) {
+func addJson(hostAndPort string, obj interface{}) {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
+
+	var indented bytes.Buffer
+	json.Indent(&indented, buf, "\t", "\t")
+
 	sOutputLock.Lock()
 	defer sOutputLock.Unlock()
 
-	sOutputMap[hostAndPort] = &ErrorObject{
-		Ip:    hostAndPort,
-		Error: err.Error(),
+	if sNumServers != 0 {
+		sOutputBuffer.Write([]byte(",\n"))
 	}
+	sOutputBuffer.Write([]byte("\t"))
+
+	switch sOutputFormat {
+	case "map":
+		sOutputBuffer.Write([]byte(fmt.Sprintf("\"%s\": ", hostAndPort)))
+	}
+
+	indented.WriteTo(sOutputBuffer)
+	sNumServers++
 }
 
-func addCompletedServer(hostAndPort string, obj *ServerObject) {
-	sOutputLock.Lock()
-	defer sOutputLock.Unlock()
-
-	sOutputMap[hostAndPort] = obj
+func addError(hostAndPort string, err error) {
+	addJson(hostAndPort, &ErrorObject{
+		Ip:    hostAndPort,
+		Error: err.Error(),
+	})
 }
 
 func main() {
@@ -109,7 +128,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	var output io.Writer
 	if *flag_outfile != "" {
 		file, err := os.Create(*flag_outfile)
 		if err != nil {
@@ -118,11 +136,10 @@ func main() {
 		}
 		defer file.Close()
 
-		output = file
+		sOutputBuffer = file
 	} else {
-		output = os.Stdout
+		sOutputBuffer = os.Stdout
 	}
-
 
 	if *flag_game != "" {
 		switch *flag_game {
@@ -170,14 +187,14 @@ func main() {
 		addr := item.(*net.TCPAddr)
 		query, err := valve.NewServerQuerier(addr.String(), *flag_timeout)
 		if err != nil {
-			showError(addr.String(), err)
+			addError(addr.String(), err)
 			return
 		}
 		defer query.Close()
 
 		info, err := query.QueryInfo()
 		if err != nil {
-			showError(addr.String(), err)
+			addError(addr.String(), err)
 			return
 		}
 
@@ -233,9 +250,16 @@ func main() {
 			}
 		}
 
-		addCompletedServer(addr.String(), out)
+		addJson(addr.String(), out)
 	}, *flag_j)
 	defer bp.Terminate()
+
+	switch sOutputFormat {
+	case "list":
+		sOutputBuffer.Write([]byte("[\n"))
+	case "map":
+		sOutputBuffer.Write([]byte("{\n"))
+	}
 
 	// Query the master.
 	err = master.Query(func(servers valve.ServerList) error {
@@ -250,24 +274,15 @@ func main() {
 	// Wait for batch processing to complete.
 	bp.Finish()
 
-	var buf []byte
-	switch *flag_format {
-	case "map":
-		buf, err = json.Marshal(sOutputMap)
-	case "list":
-		list := []interface{}{}
-		for _, obj := range sOutputMap {
-			list = append(list, obj)
-		}
-		buf, err = json.Marshal(list)
-	}
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not output json: %s\n", err.Error())
-		os.Exit(1)
+	if sNumServers != 0 {
+		sOutputBuffer.Write([]byte("\n"))
 	}
 
-	var indented bytes.Buffer
-	json.Indent(&indented, buf, "", "\t")
-	indented.WriteTo(output)
+	switch sOutputFormat {
+	case "list":
+		sOutputBuffer.Write([]byte("]\n"))
+	case "map":
+		sOutputBuffer.Write([]byte("}\n"))
+	}
 }
 
