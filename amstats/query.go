@@ -44,13 +44,12 @@ func queryMaster(db *Database, game_id int64, callback ServerCallback) {
 	// Set up the filter list.
 	switch game_id {
 	case 1:
-	//	master.FilterAppIds(valve.HL1Apps)
+		master.FilterAppIds(valve.HL1Apps)
 	case 2:
-	//	master.FilterAppIds(valve.HL2Apps)
+		master.FilterAppIds(valve.HL2Apps)
 	default:
 		panic("unknown game_id")
 	}
-	master.FilterAppIds([]valve.AppId{valve.AppId(40)})
 
 	bp := batch.NewBatchProcessor(func(item interface{}) {
 		server, err := queryServer(item.(*net.TCPAddr))
