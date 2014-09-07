@@ -67,7 +67,9 @@ func NewStatsCollector(db *Database, game_id int64) *StatsCollector {
 	return &StatsCollector{
 		db:        db,
 		game_id:   game_id,
-		global:    &GameStat{},
+		global:    &GameStat{
+			GameId: game_id,
+		},
 		rows:      map[StatsKey]*Stats{},
 		mods:      modMap,
 		addonVars: addonVarMap,
@@ -186,4 +188,6 @@ func (this *StatsCollector) finish() {
 			this.db.Insert(row)
 		}
 	}
+
+	this.db.Exec("UPDATE stats_games SET stamp = UNIX_TIMESTAMP() WHERE id = ?", this.global.Id)
 }

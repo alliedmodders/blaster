@@ -82,6 +82,13 @@ func (this *Database) Insert(holder interface{}) {
 	}
 }
 
+func (this *Database) Exec(query string, bindings ...interface{}) {
+	_, err := this.DbMap.Exec(query, bindings...)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (this *Database) Close() {
 	this.conn.Close()
 }
