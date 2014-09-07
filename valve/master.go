@@ -122,6 +122,8 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 	// Chop off the response header.
 	packet = packet[6:]
 
+	seen := map[string]bool{}
+
 	done := false
 	ip := kNullIP
 	port := uint16(0)
@@ -150,10 +152,16 @@ func (this *MasterServerQuerier) tryQuery(callback MasterQueryCallback, filters 
 				break
 			}
 
-			servers = append(servers, &net.TCPAddr{
+			addr := &net.TCPAddr{
 				IP:   ip,
 				Port: int(port),
-			})
+			}
+			if _, found := seen[addr.String()]; found {
+				continue
+			}
+
+			servers = append(servers, addr)
+			seen[addr.String()] = true
 		}
 
 		if err := callback(servers); err != nil {
