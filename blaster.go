@@ -85,7 +85,7 @@ func main() {
 	flag_master := flag.String("master", valve.MasterServer, "Master server address")
 	flag_j := flag.Int("j", 20, "Number of concurrent requests (more will introduce more timeouts)")
 	flag_timeout := flag.Duration("timeout", time.Second*3, "Timeout for querying servers")
-	flag_format := flag.String("format", "list", "JSON format (list or hash)")
+	flag_format := flag.String("format", "list", "JSON format (list or map)")
 	flag_outfile := flag.String("outfile", "", "Output to a file")
 	flag_norules := flag.Bool("norules", false, "Don't query server rules")
 	flag.Usage = func() {
@@ -97,7 +97,7 @@ func main() {
 	appids := []valve.AppId{}
 
 	switch *flag_format {
-	case "list", "hash":
+	case "list", "map":
 		sOutputFormat = *flag_format
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown format type.\n")
@@ -245,7 +245,17 @@ func main() {
 	// Wait for batch processing to complete.
 	bp.Finish()
 
-	buf, err := json.Marshal(sOutputMap)
+	var buf []byte
+	switch *flag_format {
+	case "map":
+		buf, err = json.Marshal(sOutputMap)
+	case "list":
+		list := []interface{}{}
+		for _, obj := range sOutputMap {
+			list = append(list, obj)
+		}
+		buf, err = json.Marshal(list)
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not output json: %s\n", err.Error())
 		os.Exit(1)
