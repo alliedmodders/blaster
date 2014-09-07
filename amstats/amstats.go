@@ -119,30 +119,30 @@ func queryStats(db *Database, game_id int64) {
 					ValueId: valueId,
 				}),
 			)
+		}
 
-			// Aggregate.
-			for _, table := range tables {
-				table.ServerCount++
-				table.TotalPlayers += int64(server.Info.Players)
-				table.MaxPlayers += int64(server.Info.MaxPlayers)
-				table.TotalBots += int64(server.Info.Bots)
-			}
-			collector.global.AliveCount++
-			collector.global.TotalPlayers += int64(server.Info.Players)
-			collector.global.MaxPlayers += int64(server.Info.MaxPlayers)
-			collector.global.TotalBots += int64(server.Info.Bots)
+		// Aggregate.
+		for _, table := range tables {
+			table.ServerCount++
+			table.TotalPlayers += int64(server.Info.Players)
+			table.MaxPlayers += int64(server.Info.MaxPlayers)
+			table.TotalBots += int64(server.Info.Bots)
+		}
+		collector.global.AliveCount++
+		collector.global.TotalPlayers += int64(server.Info.Players)
+		collector.global.MaxPlayers += int64(server.Info.MaxPlayers)
+		collector.global.TotalBots += int64(server.Info.Bots)
 
-			// Global table needs extra data.
-			switch server.Info.OS {
-			case valve.ServerOS_Linux:
-				collector.global.LinuxServers++
-			case valve.ServerOS_Windows:
-				collector.global.WindowsServers++
-			}
+		// Global table needs extra data.
+		switch server.Info.OS {
+		case valve.ServerOS_Linux:
+			collector.global.LinuxServers++
+		case valve.ServerOS_Windows:
+			collector.global.WindowsServers++
+		}
 
-			if server.Info.Type == valve.ServerType_Listen {
-				collector.global.ListenServers++
-			}
+		if server.Info.Type == valve.ServerType_Listen {
+			collector.global.ListenServers++
 		}
 	})
 
