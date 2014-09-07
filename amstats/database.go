@@ -41,6 +41,9 @@ func getDatabase(config *yaml.File, key string) *Database {
 		panic(err)
 	}
 
+	// Don't keep any idle connections.
+	conn.SetMaxIdleConns(0)
+
 	db := &Database{
 		&gorp.DbMap{
 			Db: conn,
