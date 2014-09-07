@@ -105,6 +105,7 @@ func addError(hostAndPort string, err error) {
 
 func main() {
 	flag_game := flag.String("game", "", "Game (hl1, hl2)")
+	flag_appid := flag.Int("appid", 0, "Query a single AppID")
 	flag_appids := flag.String("appids", "", "Comma-delimited list of AppIDs")
 	flag_master := flag.String("master", valve.MasterServer, "Master server address")
 	flag_j := flag.Int("j", 20, "Number of concurrent requests (more will introduce more timeouts)")
@@ -162,6 +163,10 @@ func main() {
 			}
 			appids = append(appids, valve.AppId(appid))
 		}
+	}
+
+	if *flag_appid != 0 {
+		appids = append(appids, valve.AppId(*flag_appid))
 	}
 
 	if len(appids) == 0 {
