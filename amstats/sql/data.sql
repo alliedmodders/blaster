@@ -36,4 +36,4 @@ INSERT INTO `server_types` (`id`, `os`, `type`) VALUES
 (1, 'linux', 'dedicated'),
 (2, 'windows', 'dedicated'),
 (3, 'windows', 'listen'),
-(4, 'mac', 'listen');
+(4, 'mac', 'dedicated');
