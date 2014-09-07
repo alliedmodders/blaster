@@ -131,6 +131,9 @@ func (this *StatsCollector) getMod(server *Server) int64 {
 }
 
 func (this *StatsCollector) finish() {
+	// Use idle conns now.
+	this.db.conn.SetMaxIdleConns(1)
+
 	// Insert the global row.
 	this.db.Insert(this.global)
 
