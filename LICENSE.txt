@@ -1,0 +1,4 @@
+Blaster is licensed under the GNU General Public License, version 3 or higher.
+The full text can be found in GPLv3.txt.
+
+Blaster is Copyright (C) 2014 AlliedModders LLC.
