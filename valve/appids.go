@@ -55,7 +55,13 @@ const (
 	App_Contagion        AppId = 238430
 	App_SDK2013          AppId = 243750
 	App_Neotokyo         AppId = 244630
+	App_FortressForever  AppId = 253530
 	App_FistfulOfFrags   AppId = 265630
+	App_ModularCombat    AppId = 349480
+	App_CodenameCURE     AppId = 355180
+	App_BlackMesa        AppId = 362890
+	App_DayOfInfamy      AppId = 447820
+	App_IOSoccer         AppId = 673560
 )
 
 var HL1Apps = []AppId{
@@ -104,12 +110,18 @@ var HL2Apps = []AppId{
 	App_Contagion,
 	App_SDK2013,
 	App_Neotokyo,
+	App_FortressForever,
 	App_FistfulOfFrags,
+	App_ModularCombat,
+	App_CodenameCURE,
+	App_BlackMesa,
+	App_DayOfInfamy,
+	App_IOSoccer,
 }
 
 func IsPreOrangeBoxApp(appId AppId) bool {
 	switch appId {
-	case App_SDK2006, App_EternalSilence, App_InsurgencyMod, App_Neotokyo:
+	case App_SDK2006, App_EternalSilence, App_InsurgencyMod, App_Neotokyo, App_FortressForever:
 		return true
 	default:
 		return false
