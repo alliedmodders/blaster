@@ -246,7 +246,7 @@ func main() {
 			out.GameMode = info.Ext.GameModeDescription
 			out.GameId = fmt.Sprintf("%d", info.Ext.GameId)
 		}
-		if info.InfoVersion == valve.A2S_INFO_GOLDSRC {
+		if info.InfoVersion == valve.S2A_INFO_GOLDSRC {
 			out.LocalAddress = info.Address
 		}
 		if info.SpecTv != nil {
