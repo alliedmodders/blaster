@@ -120,6 +120,24 @@ func (this *ServerQuerier) a2s_info(info *ServerInfo) error {
 		return err
 	}
 
+	switch data[4] {
+	case S2C_CHALLENGE:
+		// The newer protocol requires A2S_INFO requests to contain a challenge,
+		// servers that expected a challenge will have sent us a S2C_CHALLENGE response instead.
+		// Re-send the query with the challenge we received.
+		packet.WriteBytes([]byte{
+			data[5], data[6], data[7], data[8],
+		})
+		if err := this.socket.Send(packet.Bytes()); err != nil {
+			return err
+		}
+
+		data, err = this.socket.Recv()
+		if err != nil {
+			return err
+		}
+	}
+
 	return this.parse_a2s_info_reply(info, data)
 }
 
