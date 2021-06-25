@@ -11,7 +11,7 @@ import (
 
 type Stats struct {
 	BaseStat
-	ServerCount  int64
+	ServerCount int64
 }
 
 type StatsKey struct {
@@ -70,9 +70,9 @@ func NewStatsCollector(db *Database, game_id int64) *StatsCollector {
 	}
 
 	return &StatsCollector{
-		db:        db,
-		game_id:   game_id,
-		global:    &GameStat{
+		db:      db,
+		game_id: game_id,
+		global: &GameStat{
 			GameId: game_id,
 		},
 		rows:      map[StatsKey]*Stats{},
@@ -147,37 +147,37 @@ func (this *StatsCollector) finish() {
 		switch key.TableName() {
 		case "stats_mods":
 			row := &GameModStat{
-				BaseStat: stat.BaseStat,
-				StatsId: this.global.Id,
-				ModId: key.ModId,
-				ServerType: key.Type,
+				BaseStat:    stat.BaseStat,
+				StatsId:     this.global.Id,
+				ModId:       key.ModId,
+				ServerType:  key.Type,
 				ServerCount: stat.ServerCount,
 			}
 			this.db.Insert(row)
 		case "stats_games_addons":
 			row := &GameAddonStat{
-				BaseStat: stat.BaseStat,
-				StatsId: this.global.Id,
+				BaseStat:    stat.BaseStat,
+				StatsId:     this.global.Id,
 				ServerCount: stat.ServerCount,
-				ObjectId: key.AddonId,
+				ObjectId:    key.AddonId,
 			}
 			this.db.Insert(row)
 		case "stats_games_values":
 			row := &GameValueStat{
-				BaseStat: stat.BaseStat,
-				StatsId: this.global.Id,
+				BaseStat:    stat.BaseStat,
+				StatsId:     this.global.Id,
 				ServerCount: stat.ServerCount,
-				ObjectId: key.ValueId,
+				ObjectId:    key.ValueId,
 			}
 			this.db.Insert(row)
 		case "stats_mods_addons":
 			row := &GameModAddonStat{
 				GameModStat: GameModStat{
-					BaseStat: stat.BaseStat,
-					StatsId: this.global.Id,
+					BaseStat:    stat.BaseStat,
+					StatsId:     this.global.Id,
 					ServerCount: stat.ServerCount,
-					ModId: key.ModId,
-					ServerType: key.Type,
+					ModId:       key.ModId,
+					ServerType:  key.Type,
 				},
 				ObjectId: key.AddonId,
 			}
@@ -185,11 +185,11 @@ func (this *StatsCollector) finish() {
 		case "stats_mods_values":
 			row := &GameModValueStat{
 				GameModStat: GameModStat{
-					BaseStat: stat.BaseStat,
-					StatsId: this.global.Id,
+					BaseStat:    stat.BaseStat,
+					StatsId:     this.global.Id,
 					ServerCount: stat.ServerCount,
-					ModId: key.ModId,
-					ServerType: key.Type,
+					ModId:       key.ModId,
+					ServerType:  key.Type,
 				},
 				ObjectId: key.ValueId,
 			}
