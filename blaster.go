@@ -132,7 +132,7 @@ func main() {
 	if *flag_outfile != "" {
 		file, err := os.Create(*flag_outfile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not open %s for writing: %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "Could not open %s for writing: %s\n", *flag_outfile, err.Error())
 			os.Exit(1)
 		}
 		defer file.Close()
