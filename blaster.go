@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	sOutputLock sync.Mutex
+	sOutputLock   sync.Mutex
 	sOutputBuffer io.Writer
 	sOutputFormat string
-	sNumServers int64
+	sNumServers   int64
 )
 
 type ErrorObject struct {
@@ -36,38 +36,38 @@ type ErrorObject struct {
 }
 
 type ServerObject struct {
-	Address      string             `json:"ip"`
-	LocalAddress string             `json:"local_ip,omitempty"`
-	Protocol     uint8              `json:"protocol"`
-	Name         string             `json:"name"`
-	MapName      string             `json:"map"`
-	Folder       string             `json:"folder"`
-	Game         string             `json:"game"`
-	Players      uint8              `json:"players"`
-	MaxPlayers   uint8              `json:"max_players"`
-	Bots         uint8              `json:"bots"`
-	Type         string             `json:"type"`
-	Os           string             `json:"os"`
-	Visibility   string             `json:"visibility"`
-	Vac          bool               `json:"vac"`
+	Address      string `json:"ip"`
+	LocalAddress string `json:"local_ip,omitempty"`
+	Protocol     uint8  `json:"protocol"`
+	Name         string `json:"name"`
+	MapName      string `json:"map"`
+	Folder       string `json:"folder"`
+	Game         string `json:"game"`
+	Players      uint8  `json:"players"`
+	MaxPlayers   uint8  `json:"max_players"`
+	Bots         uint8  `json:"bots"`
+	Type         string `json:"type"`
+	Os           string `json:"os"`
+	Visibility   string `json:"visibility"`
+	Vac          bool   `json:"vac"`
 
 	// Only available from The Ship.
-	Ship         *valve.TheShipInfo `json:"theship,omitempty"`
+	Ship *valve.TheShipInfo `json:"theship,omitempty"`
 
 	// Only available on Source.
-	AppId        valve.AppId        `json:"appid,omitempty"`
-	GameVersion  string             `json:"game_version,omitempty"`
-	Port         uint16             `json:"port,omitempty"`
-	SteamId      string             `json:"steamid,omitempty"`
-	GameMode     string             `json:"game_mode,omitempty"`
-	GameId       string             `json:"gameid,omitempty"`
-	SpecTvPort   uint16             `json:"spectv_port,omitempty"`
-	SpecTvName   string             `json:"spectv_name,omitempty"`
+	AppId       valve.AppId `json:"appid,omitempty"`
+	GameVersion string      `json:"game_version,omitempty"`
+	Port        uint16      `json:"port,omitempty"`
+	SteamId     string      `json:"steamid,omitempty"`
+	GameMode    string      `json:"game_mode,omitempty"`
+	GameId      string      `json:"gameid,omitempty"`
+	SpecTvPort  uint16      `json:"spectv_port,omitempty"`
+	SpecTvName  string      `json:"spectv_name,omitempty"`
 
 	// Only available on Half-Life 1.
-	Mod          *valve.ModInfo     `json:"mod,omitempty"`
+	Mod *valve.ModInfo `json:"mod,omitempty"`
 
-	Rules        map[string]string  `json:"rules"`
+	Rules map[string]string `json:"rules"`
 }
 
 func addJson(hostAndPort string, obj interface{}) {
@@ -132,7 +132,7 @@ func main() {
 	if *flag_outfile != "" {
 		file, err := os.Create(*flag_outfile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not open %s for writing: %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "Could not open %s for writing: %s\n", *flag_outfile, err.Error())
 			os.Exit(1)
 		}
 		defer file.Close()
@@ -204,19 +204,19 @@ func main() {
 		}
 
 		out := &ServerObject{
-			Address:      addr.String(),
-			Protocol:     info.Protocol,
-			Name:         info.Name,
-			MapName:      info.MapName,
-			Folder:       info.Folder,
-			Game:         info.Game,
-			Players:      info.Players,
-			MaxPlayers:   info.MaxPlayers,
-			Bots:         info.Bots,
-			Type:         info.Type.String(),
-			Os:           info.OS.String(),
-			Ship:         info.TheShip,
-			Mod:          info.Mod,
+			Address:    addr.String(),
+			Protocol:   info.Protocol,
+			Name:       info.Name,
+			MapName:    info.MapName,
+			Folder:     info.Folder,
+			Game:       info.Game,
+			Players:    info.Players,
+			MaxPlayers: info.MaxPlayers,
+			Bots:       info.Bots,
+			Type:       info.Type.String(),
+			Os:         info.OS.String(),
+			Ship:       info.TheShip,
+			Mod:        info.Mod,
 		}
 		if info.Vac == 1 {
 			out.Vac = true
@@ -290,4 +290,3 @@ func main() {
 		sOutputBuffer.Write([]byte("}\n"))
 	}
 }
-
