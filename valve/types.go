@@ -78,11 +78,20 @@ func (this ServerOS) String() string {
 	}
 }
 
-// Official versions of the A2S_INFO reply.
-const A2S_INFO_GOLDSRC uint8 = 0x6d
-const A2S_INFO_SOURCE uint8 = 0x49
+// OOB request packet types.
+const A2S_INFO uint8 = 0x54
+const A2S_RULES uint8 = 0x56
 
-// Optional mod information returned by A2S_INFO_GOLDSRC.
+// Official versions of the A2S_INFO reply.
+const S2A_INFO_GOLDSRC uint8 = 0x6d
+const S2A_INFO_SOURCE uint8 = 0x49
+
+// Other OOB response packet types.
+const S2C_CHALLENGE uint8 = 0x41
+const S2A_PLAYER uint8 = 0x44
+const S2A_RULES uint8 = 0x45
+
+// Optional mod information returned by S2A_INFO_GOLDSRC.
 type ModInfo struct {
 	Url     string `json:"url"`
 	DwlUrl  string `json:"dwlurl"`
@@ -99,13 +108,13 @@ type TheShipInfo struct {
 	Duration  uint8 `json:"duration"`
 }
 
-// Optional information available with A2S_INFO_SOURCE.
+// Optional information available with S2A_INFO_SOURCE.
 type SpecTvInfo struct {
 	Port uint16
 	Name string
 }
 
-// Optional information available with A2S_INFO_SOURCE. This is a grab-bag
+// Optional information available with S2A_INFO_SOURCE. This is a grab-bag
 // of various optional bits. If some are not present they are left as 0.
 // In the future this may change to distinguish from being present as 0.
 type ExtendedInfo struct {
@@ -148,7 +157,7 @@ type ServerInfo struct {
 
 // Attempt to guess the game engine version.
 func (this *ServerInfo) GameEngine() GameEngine {
-	if this.InfoVersion == A2S_INFO_GOLDSRC || this.Ext == nil {
+	if this.InfoVersion == S2A_INFO_GOLDSRC || this.Ext == nil {
 		return GOLDSRC
 	}
 	if uint32(this.Ext.AppId) < 80 {

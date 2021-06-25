@@ -71,7 +71,7 @@ func (this *ServerQuerier) QueryInfo() (*ServerInfo, error) {
 	// Mysteriously, Half-Life 1 servers will often reply to an A2S_INFO with
 	// two extra packets: A2S_PLAYERS and then a newer A2S_INFO. We peek for
 	// up to three extra packets with a very small timeout.
-	if err == ErrMistakenReply || this.info.InfoVersion == A2S_INFO_GOLDSRC {
+	if err == ErrMistakenReply || this.info.InfoVersion == S2A_INFO_GOLDSRC {
 		err := Try(func() error {
 			return this.check_bad_a2s_info(this.info)
 		})
@@ -109,7 +109,7 @@ func (this *ServerQuerier) check_bad_a2s_info(info *ServerInfo) error {
 
 func (this *ServerQuerier) a2s_info(info *ServerInfo) error {
 	var packet PacketBuilder
-	packet.WriteBytes([]byte{0xff, 0xff, 0xff, 0xff, 0x54})
+	packet.WriteBytes([]byte{0xff, 0xff, 0xff, 0xff, A2S_INFO})
 	packet.WriteCString("Source Engine Query")
 	if err := this.socket.Send(packet.Bytes()); err != nil {
 		return err
@@ -131,14 +131,14 @@ func (this *ServerQuerier) parse_a2s_info_reply(info *ServerInfo, data []byte) e
 
 	info.InfoVersion = reader.ReadUint8()
 	switch info.InfoVersion {
-	case 0x44:
+	case S2A_PLAYER:
 		// Non-steam servers seem to reply with a corrupted packet. If we send
 		// the query again, we often get the right thing, so propagate a special
 		// error up.
 		return ErrMistakenReply
-	case A2S_INFO_SOURCE:
+	case S2A_INFO_SOURCE:
 		this.parseNewInfo(reader, info)
-	case A2S_INFO_GOLDSRC:
+	case S2A_INFO_GOLDSRC:
 		this.parseOldInfo(reader, info)
 	default:
 		return ErrUnknownInfoVersion
@@ -323,7 +323,7 @@ func (this *ServerQuerier) queryRules() (map[string]string, error) {
 func (this *ServerQuerier) a2s_rules() ([]byte, error) {
 	data := []byte{
 		0xff, 0xff, 0xff, 0xff,
-		0x56,
+		A2S_RULES,
 		0xff, 0xff, 0xff, 0xff,
 	}
 	if err := this.socket.Send(data); err != nil {
@@ -348,15 +348,15 @@ func (this *ServerQuerier) a2s_rules() ([]byte, error) {
 	}
 
 	switch data[4] {
-	case 0x45:
+	case S2A_RULES:
 		// Some servers report an immediate, very truncated A2S_RULES reply.
 		// It's not clear why - either a bug or some sort of information
 		// hiding tactic, but we support this anyway.
 		return data, nil
-	case 0x49, 0x44:
+	case S2A_INFO_SOURCE, S2A_PLAYER:
 		// Some servers reply with the wrong kind of query. For these, we retry.
 		return nil, ErrConfusedChallengeReply
-	case 0x41:
+	case S2C_CHALLENGE:
 		// Ok, continue.
 	default:
 		panic(ErrBadChallengeResponse)
@@ -365,7 +365,7 @@ func (this *ServerQuerier) a2s_rules() ([]byte, error) {
 	// Send the rules query now that we've got a challenge sequence.
 	reply := []byte{
 		0xff, 0xff, 0xff, 0xff,
-		0x56,
+		A2S_RULES,
 		data[5], data[6], data[7], data[8],
 	}
 	if err := this.socket.Send(reply); err != nil {
@@ -504,7 +504,7 @@ func (this *ServerQuerier) processRules(data []byte, compressed bool) (map[strin
 	if reader.ReadInt32() != -1 {
 		panic(ErrBadPacketHeader)
 	}
-	if reader.ReadUint8() != 0x45 {
+	if reader.ReadUint8() != S2A_RULES {
 		panic(ErrBadRulesReply)
 	}
 
