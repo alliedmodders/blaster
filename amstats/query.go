@@ -94,12 +94,6 @@ func queryServer(addr *net.TCPAddr) (*Server, error) {
 		return nil, err
 	}
 
-	// We can't query rules for CSGO servers anymore because Valve.
-	csgo := (info.Ext != nil && info.Ext.AppId == valve.App_CSGO)
-	if csgo {
-		return nil, nil
-	}
-
 	rules, err := query.QueryRules()
 	if err != nil {
 		return nil, err

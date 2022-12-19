@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const kMaxPacketSize = 1400
+const kMaxPacketSize = 5000
 
 var ErrOutOfBounds = errors.New("read out of bounds")
 
