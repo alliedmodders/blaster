@@ -192,6 +192,7 @@ func main() {
 	master, err := valve.NewMasterServerQuerier(*flag_master)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not query master: %s", err.Error())
+		os.Exit(1)
 	}
 	defer master.Close()
 
