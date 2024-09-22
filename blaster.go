@@ -254,9 +254,7 @@ func main() {
 			out.SpecTvName = info.SpecTv.Name
 		}
 
-		// We can't query rules for CSGO servers anymore because Valve.
-		csgo := (info.Ext != nil && info.Ext.AppId == valve.App_CSGO)
-		if !csgo && !*flag_norules {
+		if !*flag_norules {
 			rules, err := query.QueryRules()
 			if err != nil {
 				out.Rules = map[string]string{
